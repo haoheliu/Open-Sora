@@ -107,8 +107,8 @@ class STDiT3Block(nn.Module):
             shift_msa_zero, scale_msa_zero, gate_msa_zero, shift_mlp_zero, scale_mlp_zero, gate_mlp_zero = (
                 self.scale_shift_table[None] + t0.reshape(B, 6, -1)
             ).chunk(6, dim=1)
-
         # modulate (attention)
+
         x_m = t2i_modulate(self.norm1(x), shift_msa, scale_msa)
         if x_mask is not None:
             x_m_zero = t2i_modulate(self.norm1(x), shift_msa_zero, scale_msa_zero)
@@ -135,7 +135,6 @@ class STDiT3Block(nn.Module):
 
         # cross attention
         x = x + self.cross_attn(x, y, mask)
-
         # modulate (MLP)
         x_m = t2i_modulate(self.norm2(x), shift_mlp, scale_mlp)
         if x_mask is not None:
@@ -340,7 +339,7 @@ class STDiT3(PreTrainedModel):
         return (T, H, W)
 
     def encode_text(self, y, mask=None):
-        y = self.y_embedder(y, self.training)  # [B, 1, N_token, C]
+        y = self.y_embedder(y, self.training)  # [B, 1, N_token, C] # double = self.y_embedder(y, self.training)
         if mask is not None:
             if mask.shape[0] != y.shape[0]:
                 mask = mask.repeat(y.shape[0] // mask.shape[0], 1)
@@ -358,7 +357,6 @@ class STDiT3(PreTrainedModel):
         x = x.to(dtype)
         timestep = timestep.to(dtype)
         y = y.to(dtype)
-
         # === get pos embed ===
         _, _, Tx, Hx, Wx = x.size()
         T, H, W = self.get_dynamic_size(x)

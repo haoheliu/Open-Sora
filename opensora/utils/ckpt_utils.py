@@ -195,6 +195,7 @@ def load_checkpoint(model, ckpt_path, save_as_pt=False, model_name="model", stri
         get_logger().info("Unexpected keys: %s", unexpected_keys)
     elif ckpt_path.endswith(".safetensors"):
         from safetensors.torch import load_file
+
         state_dict = load_file(ckpt_path)
         missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=False)
         print(f"Missing keys: {missing_keys}")

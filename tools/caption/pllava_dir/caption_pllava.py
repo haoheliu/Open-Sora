@@ -8,8 +8,10 @@ fourth_level_parent = current_file.parents[3]
 
 datasets_dir = os.path.join(fourth_level_parent, "opensora/datasets")
 import sys
+
 sys.path.append(datasets_dir)
 from read_video import read_video_av
+
 sys.path.remove(datasets_dir)
 
 import itertools
@@ -131,11 +133,7 @@ def get_index(num_frames, num_segments):
 def load_video(video_path, num_frames, return_msg=False, resolution=336):
     transforms = torchvision.transforms.Resize(size=resolution)
     # vr = VideoReader(video_path, ctx=cpu(0), num_threads=1)
-    vframes, aframes, info = read_video_av(
-        video_path,
-        pts_unit="sec", 
-        output_format="THWC"
-    )
+    vframes, aframes, info = read_video_av(video_path, pts_unit="sec", output_format="THWC")
     print(vframes.shape)
     total_num_frames = len(vframes)
     # print("Video path: ", video_path)
@@ -151,7 +149,7 @@ def load_video(video_path, num_frames, return_msg=False, resolution=336):
         # # " " should be added in the start and end
         # msg = f"The video contains {len(frame_indices)} frames sampled at {sec} seconds."
         # return images_group, msg
-        exit('return_msg not implemented yet')
+        exit("return_msg not implemented yet")
     else:
         return images_group
 
@@ -236,7 +234,7 @@ def parse_args():
         "--error_message",
         type=str,
         required=False,
-        default='error occured during captioning',
+        default="error occured during captioning",
     )
     args = parser.parse_args()
     return args
@@ -419,6 +417,7 @@ def main():
     new_csv_path = args.csv_path.replace(".csv", "_text.csv")
     df.to_csv(new_csv_path, index=False)
     print(f"Results saved to {new_csv_path}")
+
 
 if __name__ == "__main__":
     main()

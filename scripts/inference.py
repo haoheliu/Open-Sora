@@ -9,6 +9,13 @@ from colossalai.cluster import DistCoordinator
 from mmengine.runner import set_random_seed
 from tqdm import tqdm
 
+import os
+import random
+
+os.environ["HF_HOME"] = "/home/lxb/Disk_SSD/haoheliu_2023_dec/.cache/huggingface"
+os.environ["TORCH_HOME"] = "/home/lxb/Disk_SSD/haoheliu_2023_dec/.cache/torch"
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
+
 from opensora.acceleration.parallel_states import set_sequence_parallel_group
 from opensora.datasets import save_sample
 from opensora.datasets.aspect import get_image_size, get_num_frames
@@ -44,9 +51,7 @@ def main():
 
     # == device and dtype ==
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    cfg_dtype = cfg.get("dtype", "fp32")
-    assert cfg_dtype in ["fp16", "bf16", "fp32"], f"Unknown mixed precision {cfg_dtype}"
-    dtype = to_torch_dtype(cfg.get("dtype", "bf16"))
+    dtype = torch.float16
     torch.backends.cuda.matmul.allow_tf32 = True
     torch.backends.cudnn.allow_tf32 = True
 
@@ -73,6 +78,7 @@ def main():
     # ======================================================
     logger.info("Building models...")
     # == build text-encoder and vae ==
+    cfg.text_encoder["dtype"] = torch.float16
     text_encoder = build_module(cfg.text_encoder, MODELS, device=device)
     vae = build_module(cfg.vae, MODELS).to(device, dtype).eval()
 
@@ -86,10 +92,13 @@ def main():
         ), "resolution and aspect_ratio must be provided if image_size is not provided"
         image_size = get_image_size(resolution, aspect_ratio)
     num_frames = get_num_frames(cfg.num_frames)
-
+    num_frames = 64  # 68
+    image_size = (256, 256)  # TODO
+    # image_size = (512, 512) # TODO
     # == build diffusion model ==
     input_size = (num_frames, *image_size)
     latent_size = vae.get_latent_size(input_size)
+    print(latent_size)
     model = (
         build_module(
             cfg.model,
@@ -131,7 +140,7 @@ def main():
     save_fps = cfg.get("save_fps", fps // cfg.get("frame_interval", 1))
     multi_resolution = cfg.get("multi_resolution", None)
     batch_size = cfg.get("batch_size", 1)
-    num_sample = cfg.get("num_sample", 1)
+    num_sample = cfg.get("num_sample", 10)
     loop = cfg.get("loop", 1)
     condition_frame_length = cfg.get("condition_frame_length", 5)
     condition_frame_edit = cfg.get("condition_frame_edit", 0.0)
@@ -258,21 +267,28 @@ def main():
                     refs, ms = append_generated(
                         vae, video_clips[-1], refs, ms, loop_i, condition_frame_length, condition_frame_edit
                     )
-
                 # == sampling ==
-                torch.manual_seed(1024)
+                # torch.manual_seed(1234)
                 z = torch.randn(len(batch_prompts), vae.out_channels, *latent_size, device=device, dtype=dtype)
-                masks = apply_mask_strategy(z, refs, ms, loop_i, align=align)
-                samples = scheduler.sample(
-                    model,
-                    text_encoder,
-                    z=z,
-                    prompts=batch_prompts_loop,
-                    device=device,
-                    additional_args=model_args,
-                    progress=verbose >= 2,
-                    mask=masks,
-                )
+                ###################### TODO Save noise as debugger
+                # z_video = torch.load("z_video.pt", map_location=device)
+                # z = z_video
+                #####################
+                z = z.to(device, dtype)
+                # masks = apply_mask_strategy(z, refs, ms, loop_i, align=align)
+                masks = None
+                with torch.no_grad():
+                    samples = scheduler.sample(
+                        model,
+                        text_encoder,
+                        z=z,
+                        prompts=batch_prompts_loop,
+                        device=device,
+                        additional_args=model_args,
+                        progress=verbose >= 2,
+                        mask=masks,
+                    )
+                print("samples", torch.mean(samples), torch.std(samples))
                 samples = vae.decode(samples.to(dtype), num_frames=num_frames)
                 video_clips.append(samples)
 

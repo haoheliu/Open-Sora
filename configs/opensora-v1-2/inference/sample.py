@@ -1,9 +1,9 @@
 resolution = "240p"
 aspect_ratio = "9:16"
-num_frames = 51
-fps = 24
+num_frames = 64
+fps = 16
 frame_interval = 1
-save_fps = 24
+save_fps = 16
 
 save_dir = "./samples/samples/"
 seed = 42
@@ -33,8 +33,8 @@ text_encoder = dict(
 )
 scheduler = dict(
     type="rflow",
-    use_timestep_transform=True,
-    num_sampling_steps=30,
+    use_timestep_transform=False,
+    num_sampling_steps=200,
     cfg_scale=7.0,
 )
 

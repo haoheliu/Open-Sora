@@ -12,6 +12,8 @@
     <a href="https://huggingface.co/spaces/hpcai-tech/open-sora"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Gradio Demo-blue"></a>
 </div>
 
+python scripts/inference.py configs/opensora-v1-2/inference/sample.py   --num-frames 2s --resolution 240p --aspect-ratio 9:16   --prompt "a cut huskey dog is running on the grass with some people in the background and the sky is blue and wheather is nice"
+
 ## Open-Sora: Democratizing Efficient Video Production for All
 
 We design and implement **Open-Sora**, an initiative dedicated to **efficiently** producing high-quality video. We hope to make the model,

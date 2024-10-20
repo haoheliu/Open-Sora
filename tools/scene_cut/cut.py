@@ -68,6 +68,7 @@ def process_single_row(row, args):
     )
     return True
 
+
 def split_video(
     video_path,
     scene_list,
@@ -115,7 +116,7 @@ def split_video(
         if os.path.exists(save_path):
             # print_log(f"File '{save_path}' already exists. Skip.", logger=logger)
             continue
-        
+
         # ffmpeg cmd
         cmd = [FFMPEG_PATH]
 
@@ -204,5 +205,7 @@ def main():
         assert args.meta_path.endswith("timestamp.csv"), "Only support *timestamp.csv"
         meta.to_csv(args.meta_path.replace("timestamp.csv", "correct_timestamp.csv"), index=False)
         print(f"Corrected timestamp file saved to '{args.meta_path.replace('timestamp.csv', 'correct_timestamp.csv')}'")
+
+
 if __name__ == "__main__":
     main()

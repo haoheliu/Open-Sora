@@ -47,15 +47,15 @@ class LlamaRMSNorm(nn.Module):
 
 
 def get_layernorm(hidden_size: torch.Tensor, eps: float, affine: bool, use_kernel: bool):
-    if use_kernel:
-        try:
-            from apex.normalization import FusedLayerNorm
+    # if use_kernel:
+    #     try:
+    #         from apex.normalization import FusedLayerNorm
 
-            return FusedLayerNorm(hidden_size, elementwise_affine=affine, eps=eps)
-        except ImportError:
-            raise RuntimeError("FusedLayerNorm not available. Please install apex.")
-    else:
-        return nn.LayerNorm(hidden_size, eps, elementwise_affine=affine)
+    #         return FusedLayerNorm(hidden_size, elementwise_affine=affine, eps=eps)
+    #     except ImportError:
+    #         raise RuntimeError("FusedLayerNorm not available. Please install apex.")
+    # else:
+    return nn.LayerNorm(hidden_size, eps, elementwise_affine=affine)
 
 
 def modulate(norm_func, x, shift, scale):
@@ -163,7 +163,7 @@ class Attention(nn.Module):
         if rope is not None:
             self.rope = True
             self.rotary_emb = rope
-        
+
         self.is_causal = False
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -209,7 +209,7 @@ class Attention(nn.Module):
             attn = attn.to(torch.float32)
             if self.is_causal:
                 causal_mask = torch.tril(torch.ones_like(attn), diagonal=0)
-                causal_mask = torch.where(causal_mask.bool(), 0, float('-inf'))
+                causal_mask = torch.where(causal_mask.bool(), 0, float("-inf"))
                 attn += causal_mask
             attn = attn.softmax(dim=-1)
             attn = attn.to(dtype)  # cast back attn to original dtype

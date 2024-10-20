@@ -137,7 +137,7 @@ def collate_fn_batch(batch):
     """
     # filter out None
     batch = [x for x in batch if x is not None]
-    
+
     res = torch.utils.data.default_collate(batch)
 
     # squeeze the first dimension, which is due to torch.stack() in default_collate()
